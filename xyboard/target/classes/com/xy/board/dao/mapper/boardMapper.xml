@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="boardDAO">
+<!-- 페이지 적용 -->
+<select id="pageList" resultType="hashmap" parameterType="hashmap">
+  <![CDATA[
+      SELECT b.num, b.title, u.name, date_format(b.date, '%Y-%m-%d') as date, b.count, b.id
+      FROM b_board as b
+      INNER join b_users as u
+      ON (b.id = u.id)
+      WHERE del_chk = 'N'
+      ORDER BY num DESC
+      LIMIT #{pageStart}, #{perPageNum}
+  ]]>
+</select>
+
+<!-- 총 게시글 수 -->
+<select id="countBoardList" resultType="Integer">
+  <![CDATA[
+      SELECT count(*)
+      FROM b_board
+      WHERE del_chk = 'N'
+  ]]>
+</select>
+
+<!-- 게시판 목록 -->
+<select id="list" resultType="boardDTO">
+<![CDATA[
+	SELECT b.num, b.title, u.name, b.date, b.count, b.id
+	  FROM b_board as b
+	 INNER join b_users as u
+	    ON (b.id = u.id)
+	 WHERE del_chk = 'N'
+	 ORDER BY num DESC
+]]>
+</select>	
+<!-- CDATA를 사용하는 이유는 Mybatis 사용시 쿼리문에 문자열 비교연산자나 부등호를 처리할 때가 있습니다. 
+그러면 < 와 같은 기호를 사용할 때 괄호인지 비교연산자 인지 확인이 되지 않습니다. 또한 특수문자 사용하는데 제한이 있습니다.
+단, CDATA를 사용한다 하더라도 ;(세미콜론)만은 예외입니다. 
+즉, Mapper.xml에서는 세미콜론을 적지 않습니다. 
+또한 하나의 쿼리태그당 하나의 쿼리만 실행합니다. -->
+<!-- 해당 게시글 보기 -->
+<select id="select" parameterType="int" resultType="boardDTO">
+	SELECT *
+	  FROM b_board
+	 WHERE num = #{num}
+</select>
+<!-- 삽입 -->
+<insert id="insert" parameterType="boardDTO">
+	INSERT INTO b_board (title, contents, id) 
+	VALUES(#{title},#{contents},#{id})
+</insert>	
+<!-- 수정 -->
+<update id="update" parameterType="boardDTO">
+	UPDATE b_board SET title = #{title}, contents = #{contents}
+	 WHERE num = #{num}
+</update>
+	<!-- 수정:조회수 증가 -->
+<update id="updateCount" parameterType="int">
+	UPDATE b_board 
+	   SET count = count+1
+	 WHERE num = #{num}
+</update>
+	<!-- 삭제 : 상태값 -->
+<delete id="delete" parameterType="boardDTO">
+<![CDATA[
+	UPDATE b_board SET del_chk = 'Y'
+	 WHERE num = #{num}
+]]>
+</delete>
+</mapper>
